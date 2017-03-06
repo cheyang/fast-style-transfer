@@ -37,11 +37,11 @@ def build_parser():
 
     parser.add_argument('--test', type=str,
                         dest='test', help='test image path',
-                        metavar='TEST', default=False)
+                        metavar='TEST', default="examples/content/chicago.jpg")
 
     parser.add_argument('--test-dir', type=str,
                         dest='test_dir', help='test image save dir',
-                        metavar='TEST_DIR', default=False)
+                        metavar='TEST_DIR', default="examples/content/")
 
     parser.add_argument('--slow', dest='slow', action='store_true',
                         help='gatys\' approach (for debugging, not supported)',
@@ -101,12 +101,17 @@ def build_parser():
     return parser
 
 def check_opts(opts):
-    exists(opts.checkpoint_dir, "checkpoint dir not found!")
+    if not os.path.exists(opts.checkpoint_dir):
+        os.makedirs(opts.checkpoint_dir)
+    if not os.path.exists(opts.train_path):
+        os.makedirs(opts.train_path)
+    if not os.path.exists(opts.test_dir):
+        os.makedirs(opts.test_dir)
+    # exists(opts.checkpoint_dir, "checkpoint dir not found!")
     exists(opts.style, "style path not found!")
-    exists(opts.train_path, "train path not found!")
+    # exists(opts.train_path, "train path not found!")
     if opts.test or opts.test_dir:
         exists(opts.test, "test img not found!")
-        exists(opts.test_dir, "test directory not found!")
     exists(opts.vgg_path, "vgg network data not found!")
     assert opts.epochs > 0
     assert opts.batch_size > 0
@@ -133,12 +138,14 @@ def main():
     elif options.test:
         content_targets = [options.test]
 
+    model_name = os.path.splitext(os.path.basename(options.style))[0]
+
     kwargs = {
         "slow":options.slow,
         "epochs":options.epochs,
         "print_iterations":options.checkpoint_iterations,
         "batch_size":options.batch_size,
-        "save_path":os.path.join(options.checkpoint_dir,'fns.ckpt'),
+        "save_path":os.path.join(options.checkpoint_dir,'.'.join([model_name,'ckpt'])),
         "learning_rate":options.learning_rate,
         "device":options.device,
         "total_iterations":options.total_iterations,

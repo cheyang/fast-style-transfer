@@ -19,10 +19,10 @@ from flask import Flask, send_file, request
 from werkzeug.exceptions import BadRequest
 from werkzeug.utils import secure_filename
 
-from evaluate import ffwd_to_img
+from evaluate import ffwd_to_img, ffwd_different_dimensions
 
 ALLOWED_EXTENSIONS = set(['jpg', 'jpeg'])
-app = Flask(__name__)
+app = Flask(__name__, static_url_path='')
 
 
 @app.route('/<path:path>', methods=["POST"])
@@ -40,14 +40,33 @@ def style_transfer(path):
         return BadRequest("Invalid file type")
     if file and allowed_file(file.filename):
         filename = secure_filename(file.filename)
-        input_filepath = os.path.join('./images/', filename)
-        output_filepath = os.path.join('/output/', filename)
+        input_filepath = os.path.join('/images_input/', filename)
+        output_filepath = os.path.join('/images_output/', filename)
         file.save(input_filepath)
 
         # Get checkpoint filename from la_muse
-        checkpoint = request.form.get("checkpoint") or "la_muse.ckpt"
-        ffwd_to_img(input_filepath, output_filepath, '/input/' + checkpoint, '/gpu:0')
+        # checkpoint = request.form.get("checkpoint") or "la_muse.ckpt"
+        # checkpoint = "/checkpoint/la_muse.ckpt"
+        # if os.environ['d']
+        try:
+            checkpoint = os.environ["CHECKPOINT"]
+        except:
+            checkpoint = "/la_muse.ckpt"
+
+        try:
+            checkpoint_dir = os.environ["CHECKPOINT_DIR"]
+        except:
+            checkpoint_dir = "/data"
+
+        checkpoint = request.form.get("checkpoint") or checkpoint
+
+        ffwd_different_dimensions([input_filepath], [output_filepath], os.path.join(checkpoint_dir, checkpoint), '/gpu:0')
+        # ffwd_to_img(input_filepath, output_filepath, '/input/' + checkpoint, '/gpu:0')
         return send_file(output_filepath, mimetype='image/jpg')
+
+@app.route('/', methods=['GET'])
+def root():
+    return app.send_static_file('index.html')
 
 
 def allowed_file(filename):

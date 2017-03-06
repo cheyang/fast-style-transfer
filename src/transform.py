@@ -35,7 +35,12 @@ def _conv_tranpose_layer(net, num_filters, filter_size, strides):
     # new_shape = #tf.pack([tf.shape(net)[0], new_rows, new_cols, num_filters])
 
     new_shape = [batch_size, new_rows, new_cols, num_filters]
-    tf_shape = tf.pack(new_shape)
+
+    if tf.__version__.startswith('0.1'):
+        tf_shape = tf.pack(new_shape)
+    else:
+        tf_shape = tf.stack(new_shape)
+
     strides_shape = [1,strides,strides,1]
 
     net = tf.nn.conv2d_transpose(net, weights_init, tf_shape, strides_shape, padding='SAME')

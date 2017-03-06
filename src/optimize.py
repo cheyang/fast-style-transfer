@@ -80,7 +80,8 @@ def optimize(content_targets, style_target, content_weight, style_weight,
             size = height * width * filters
             feats = tf.reshape(layer, (bs, height * width, filters))
             feats_T = tf.transpose(feats, perm=[0,2,1])
-            grams = tf.batch_matmul(feats_T, feats) / size
+            # see https://github.com/tensorflow/tensorflow/issues/6560
+            grams = tf.matmul(feats_T, feats) / size
             style_gram = style_features[style_layer]
             style_losses.append(2 * tf.nn.l2_loss(grams - style_gram)/style_gram.size)
 

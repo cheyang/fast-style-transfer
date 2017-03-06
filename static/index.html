@@ -1,0 +1,194 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Upload file</title>
+
+
+<link rel="stylesheet" href="bootstrap-3.3.7-dist/css/bootstrap-theme.min.css">
+<link rel="stylesheet" href="bootstrap-3.3.7-dist/css/bootstrap.min.css">
+
+</head>
+<body>
+
+<script src="./resource/jquery.js"></script>
+<script src="./resource/jquery.ui.widget.js"></script>
+<script src="./resource/jquery.fileupload.js"></script>
+
+<div class="fileupload fileupload-new" >
+  <span class="btn btn-success btn-file">
+	  <span class=" fileupload-new">
+	  	<i class="glyphicon glyphicon-plus"></i>选择图片
+	  </span>
+	  
+	  <input type="file" id="fileupload" name="file" />
+  </span>
+  <span class="fileupload-preview"></span>
+  <a href="#" class="close fileupload-exists" data-dismiss="fileupload" style="float: none">×</a>
+  
+	<div class="upload-form" style="display: inline;">
+		<button class="upload-button btn btn-primary">图片转换</button>
+		<select class="form-control checkpoint">
+		  <option value="/input/la_muse.ckpt">la_muse</option>
+		  <option value="/input/rain_princess.ckpt">rain_princess</option>
+		  <option value="/input/scream.ckpt">scream</option>
+		  <option value="/input/udnie.ckpt">udnie</option>
+		  <option value="/input/wave.ckpt">wave</option>
+		  <option value="/input/wreck.ckpt">wreck</option>
+		</select>
+		<div class="upload-status">
+			<span class="uploading-text">图片转换中...</span>
+			<span class="upload-failed-text">图片转换失败</span>
+		</div>
+	</div>
+</div>
+
+<div class="pic-box">
+	<div class="origin-pic pic-placeholder">
+	</div>
+	<div class="target-pic pic-placeholder"></div>
+</div>
+
+
+</div>
+<script>
+
+function readFile(file) {
+	var img = $('<img/>').attr('width', 500).attr('src', window.URL.createObjectURL(file)).on('load', function() {
+		window.URL.revokeObjectURL(img.attr('src'))
+	});
+  $('.pic-box .origin-pic').html(img);
+}
+
+function convertFile(file) {
+	var formData = new FormData();
+	// 添加参数
+	if($('.checkpoint').val()) {
+  	formData.append('checkpoint', $('.checkpoint').val())
+	}
+	
+  formData.append('file', file, file.name)
+  var xhr = new XMLHttpRequest();    
+  var url = '/' + file.name;
+	xhr.open("post", url, true);
+	xhr.responseType = "blob";
+	xhr.onload = function() {
+			$('.uploading-text').hide();
+	    if (this.status == 200) {
+	        var blob = this.response;  // this.response也就是请求的返回就是Blob对象
+	        var img = $('<img/>')
+	        img.onload = function(e) {
+	          window.URL.revokeObjectURL(img.src); // 清除释放
+	        };
+	        img.src = window.URL.createObjectURL(blob);
+	        var img = $('<img/>').attr('width', 500).attr('src', window.URL.createObjectURL(blob)).on('load', function() {
+						window.URL.revokeObjectURL(img.attr('src'))
+					});
+	        $('.pic-box .target-pic').html(img);
+	    }else {
+	    	$('.upload-failed-text').show();
+	    }
+	}
+	xhr.send(formData);
+}
+
+$(function () {
+		var picFormData
+		$('.upload-form').hide();
+		$('.upload-button')
+	    .click(function () {
+	        picFormData.submit();
+	    });
+	  $('.origin-pic').click(function() {
+			$('#fileupload').click();
+	  });
+    $('#fileupload').fileupload({
+        add: function (e, data) {
+        		readFile(data.files[0])
+        		picFormData = data;
+            $('.upload-form').show();
+            $('.uploading-text').hide();
+            $('.upload-failed-text').hide();
+        },
+        submit: function (e, data) {
+        	$('.uploading-text').show();
+        	$('.upload-failed-text').hide();
+		      convertFile(data.files[0]);
+		      return false;
+		  	},
+        done: function (e, data) {
+
+        }
+    });
+});
+
+</script>
+
+
+<style>
+/* leave this part out */
+body{text-align:center; padding-top:30px;}
+/* leave this part out */
+
+.clearfix{*zoom:1;}.clearfix:before,.clearfix:after{display:table;content:"";line-height:0;}
+.clearfix:after{clear:both;}
+.hide-text{font:0/0 a;color:transparent;text-shadow:none;background-color:transparent;border:0;}
+.input-block-level{display:block;width:100%;min-height:30px;-webkit-box-sizing:border-box;-moz-box-sizing:border-box;box-sizing:border-box;}
+.btn-file{overflow:hidden;position:relative;vertical-align:middle;}.btn-file>input{position:absolute;top:0;right:0;margin:0;opacity:0;filter:alpha(opacity=0);transform:translate(-300px, 0) scale(4);font-size:23px;direction:ltr;cursor:pointer;}
+.fileupload{margin-bottom:35px;}.fileupload .uneditable-input{display:inline-block;margin-bottom:0px;vertical-align:middle;cursor:text;}
+.fileupload .thumbnail{overflow:hidden;display:inline-block;margin-bottom:5px;vertical-align:middle;text-align:center;}.fileupload .thumbnail>img{display:inline-block;vertical-align:middle;max-height:100%;}
+.fileupload .btn{vertical-align:middle;}
+.fileupload-exists .fileupload-new,.fileupload-new .fileupload-exists{display:none;}
+.fileupload-inline .fileupload-controls{display:inline;}
+.fileupload-new .input-append .btn-file{-webkit-border-radius:0 3px 3px 0;-moz-border-radius:0 3px 3px 0;border-radius:0 3px 3px 0;}
+.thumbnail-borderless .thumbnail{border:none;padding:0;-webkit-border-radius:0;-moz-border-radius:0;border-radius:0;-webkit-box-shadow:none;-moz-box-shadow:none;box-shadow:none;}
+.fileupload-new.thumbnail-borderless .thumbnail{border:1px solid #ddd;}
+.control-group.warning .fileupload .uneditable-input{color:#a47e3c;border-color:#a47e3c;}
+.control-group.warning .fileupload .fileupload-preview{color:#a47e3c;}
+.control-group.warning .fileupload .thumbnail{border-color:#a47e3c;}
+.control-group.error .fileupload .uneditable-input{color:#b94a48;border-color:#b94a48;}
+.control-group.error .fileupload .fileupload-preview{color:#b94a48;}
+.control-group.error .fileupload .thumbnail{border-color:#b94a48;}
+.control-group.success .fileupload .uneditable-input{color:#468847;border-color:#468847;}
+.control-group.success .fileupload .fileupload-preview{color:#468847;}
+.control-group.success .fileupload .thumbnail{border-color:#468847;}
+
+
+.pic-box {
+	margin: 0 auto;
+	overflow: hidden;
+}
+.checkpoint {
+	display: inline-block;
+	width: 300px;
+	margin-left: 40px;
+}
+.pic-placeholder {
+	width: 520px;
+	height: 520px;
+	padding: 10px;
+	border: 1px solid #ccc;
+}
+.origin-pic {
+	float: left;
+	margin-left: 25px;
+}
+.target-pic {
+	float: right;
+	margin-right: 25px;
+}
+.upload-status {
+	height: 20px;
+	font-weight: bold;
+}
+.origin-pic {
+	cursor: pointer;
+}
+.origin-pic:hover{
+	background-color: #f3eeee;
+}
+</style>
+
+
+</body> 
+</html>
